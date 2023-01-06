@@ -10,8 +10,17 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.discord.commands.*;
 import org.discord.events.EventJoin;
 import org.discord.interfaces.JDACommands;
+import org.discord.token.Token;
+import org.openqa.selenium.By;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import javax.security.auth.login.LoginException;
+import java.time.Duration;
 import java.util.Arrays;
 
 public class Main {
@@ -20,7 +29,19 @@ public class Main {
     public static JDACommands jdaCommands;
 
     public static void main(String[] args) throws LoginException {
-        jdaCommands = new JDACommands();
+        System.setProperty("webdriver.chrome.driver", "C:\\Users\\Bruger\\Desktop\\GeckoDriver\\chromedriver.exe");
+
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");
+        WebDriver driver = new ChromeDriver(options);
+
+        driver.manage().window().setSize(new Dimension(800, 700));
+        String url = "https://www.ultimate-bravery.net/Tft";
+        driver.get(url);
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(5));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("ub-champion-portrait")));
+        System.out.println("Driver is ready");
+        jdaCommands = new JDACommands(driver);
         jdaCommands.registerCommand(new CmdPlay());
         jdaCommands.registerCommand(new CmdSkip());
         jdaCommands.registerCommand(new CmdLeave());
@@ -33,7 +54,7 @@ public class Main {
 
         JDA jda = null;
         try {
-            jda = JDABuilder.createDefault("MTAzMDEzNDgxMzQxNzU0MTYzMg.GzWR_j.w_XeEvqt8nWR7-iBJ0hZsSKIShfxuiTobRZiqQ", Arrays.asList(INTENTS)).enableCache(CacheFlag.VOICE_STATE).setActivity(Activity.listening("Top 5 fortnite youtubers who've sworn in their videos")).addEventListeners(new EventJoin()).addEventListeners(jdaCommands).addEventListeners(new CmdSlash()).build().awaitReady();
+            jda = JDABuilder.createDefault(Token.token, Arrays.asList(INTENTS)).enableCache(CacheFlag.VOICE_STATE).setActivity(Activity.listening("Top 5 fortnite youtubers who've sworn in their videos")).addEventListeners(new EventJoin()).addEventListeners(jdaCommands).addEventListeners(new CmdSlash()).build().awaitReady();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -48,5 +69,10 @@ public class Main {
         guild.upsertCommand("elorip", "Elo rip").queue();
 
         }
+        Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+            public void run() {
+                driver.close();
+            }
+        }, "Shutdown-thread"));
     }
 }
